@@ -49,3 +49,11 @@
 - Included getters/setters for all fields
 - Integer salary type assuming whole currency units
 
+
+
+# Step 2.2: Add Persistence Layer
+
+## Implementation 1
+## Implementation Details
+- Created CompensationRepository interface
+- Added MongoDB repository support
