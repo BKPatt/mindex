@@ -36,3 +36,16 @@
 - Used Spring Boot test framework for integration testing
 - Uses the existing test data from employee_database.json
 - Tested both employee data and report counts
+
+
+
+# Step 2.1: Create Compensation Class
+
+## Iteration 1
+## Implementation Details
+- Created Compensation class with the required fields
+- Added employeeId for MongoDB indexing
+- Used LocalDate for date handling
+- Included getters/setters for all fields
+- Integer salary type assuming whole currency units
+
