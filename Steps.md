@@ -21,3 +21,18 @@
  - Service layer designed to separate business logic from controller
  - Using the recursive implementation handles nested reporting structures
  - Likewise, added safety against circular references
+
+
+
+# Step 1.3: Implement Unit Tests
+
+## Iteration 1
+## Implementation Details
+- Created test class for ReportingStructure endpoint
+- Tests cover three scenarios:
+  1. Full hierarchy (John Lennon - 4 reports)
+  2. Partial hierarchy (Ringo - 2 reports)
+  3. No reports (Pete Best)
+- Used Spring Boot test framework for integration testing
+- Uses the existing test data from employee_database.json
+- Tested both employee data and report counts
