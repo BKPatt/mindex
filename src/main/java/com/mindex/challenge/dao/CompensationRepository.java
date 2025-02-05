@@ -1,4 +1,4 @@
-package com.mindex.challenge.data.dao;
+package com.mindex.challenge.dao;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

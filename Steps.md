@@ -53,7 +53,7 @@
 
 # Step 2.2: Add Persistence Layer
 
-## Implementation 1
+## Iteration 1
 ## Implementation Details
 - Created CompensationRepository interface
 - Added MongoDB repository support
@@ -70,3 +70,15 @@
 - Added error handling for missing data
 - Service layer validates employee existence
 - MongoDB handles persistence
+
+
+
+# Step 2.4: Add Unit Tests
+
+## Iteration 1
+## Implementation Details
+- Created integration tests for compensation endpoints
+- Tests cover:
+  - Create and read operations
+  - Invalid employee handling
+  - Data validation
