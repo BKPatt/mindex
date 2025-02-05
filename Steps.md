@@ -57,3 +57,16 @@
 ## Implementation Details
 - Created CompensationRepository interface
 - Added MongoDB repository support
+
+
+
+# Step 2.3: Create REST Endpoints
+
+## Iteration 1
+## Implementation Details
+- Created service interface and implementation
+- Added REST controller with POST/GET endpoints
+- Implemented employee validation
+- Added error handling for missing data
+- Service layer validates employee existence
+- MongoDB handles persistence
