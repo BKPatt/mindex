@@ -1,14 +1,16 @@
 package com.mindex.challenge;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mindex.challenge.dao.EmployeeRepository;
-import com.mindex.challenge.data.Employee;
-import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.InputStream;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mindex.challenge.dao.EmployeeRepository;
+import com.mindex.challenge.data.Employee;
+
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class DataBootstrap {
@@ -22,9 +24,12 @@ public class DataBootstrap {
 
     @PostConstruct
     public void init() {
+        // Clear any existing records to avoid duplicates
+        employeeRepository.deleteAll();
+
         InputStream inputStream = this.getClass().getResourceAsStream(DATASTORE_LOCATION);
 
-        Employee[] employees = null;
+        Employee[] employees;
 
         try {
             employees = objectMapper.readValue(inputStream, Employee[].class);

@@ -3,8 +3,6 @@ package com.mindex.challenge.service.impl;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,46 +13,37 @@ import com.mindex.challenge.service.ReportingStructureService;
 
 @Service
 public class ReportingStructureServiceImpl implements ReportingStructureService {
-    private static final Logger LOG = LoggerFactory.getLogger(ReportingStructureServiceImpl.class);
-
     @Autowired
     private EmployeeRepository employeeRepository;
 
     @Override
     public ReportingStructure generate(String employeeId) {
-        LOG.debug("Generating reporting structure for id [{}]", employeeId);
-        
-        Employee employee = employeeRepository.findByEmployeeId(employeeId);
-        if (employee == null) {
-            throw new RuntimeException("Invalid employeeId: " + employeeId);
+        try {
+            Employee employee = employeeRepository.findByEmployeeId(employeeId);
+            if (employee == null) {
+                throw new IllegalArgumentException("Invalid employeeId: " + employeeId);
+            }
+            int totalReports = countReports(employee, new HashSet<>());
+            return new ReportingStructure(employee, totalReports);
+        } catch (Exception e) {
+            throw e;
         }
-
-        // Use Set to calculate total reports to handle circular references
-        int totalReports = countReports(employee, new HashSet<>());
-        
-        return new ReportingStructure(employee, totalReports);
     }
 
-    private int countReports(Employee employee, Set<String> counted) {
-        if (employee.getDirectReports() == null) {
+    private int countReports(Employee employee, Set<String> visited) {
+        if (employee == null || visited.contains(employee.getEmployeeId())) {
             return 0;
         }
-
-        int total = 0;
-        for (Employee report : employee.getDirectReports()) {
-            // Skip if we've already counted employee to prevent infinite loops
-            if (counted.contains(report.getEmployeeId())) {
-                continue;
+        visited.add(employee.getEmployeeId());
+        int count = 0;
+        if (employee.getDirectReports() != null) {
+            for (Employee directReport : employee.getDirectReports()) {
+                Employee report = employeeRepository.findByEmployeeId(directReport.getEmployeeId());
+                if (report != null) {
+                    count += 1 + countReports(report, visited);
+                }
             }
-            
-            // Marking this employee as counted
-            counted.add(report.getEmployeeId());
-            
-            // Get full employee data and add their reports
-            Employee fullReport = employeeRepository.findByEmployeeId(report.getEmployeeId());
-            total += 1 + countReports(fullReport, counted);
         }
-        
-        return total;
+        return count;
     }
 }

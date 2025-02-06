@@ -1,9 +1,14 @@
 package com.mindex.challenge.service.impl;
 
-import static org.junit.Assert.*;
+import java.time.LocalDate;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -13,13 +18,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mindex.challenge.data.Compensation;
-import com.mindex.challenge.data.Employee;
-
-import java.time.LocalDate;
+import com.mindex.challenge.exception.ErrorResponse;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class CompensationServiceImplTest {
+    private static final Logger LOG = LoggerFactory.getLogger(CompensationServiceImplTest.class);
 
     @LocalServerPort
     private int port;
@@ -28,63 +32,128 @@ public class CompensationServiceImplTest {
     private TestRestTemplate restTemplate;
 
     private String compensationUrl;
-    private String compensationIdUrl;
+    private String compensationByIdUrl;
 
     @Before
     public void setup() {
         compensationUrl = "http://localhost:" + port + "/compensation";
-        compensationIdUrl = "http://localhost:" + port + "/compensation/{id}";
+        compensationByIdUrl = "http://localhost:" + port + "/compensation/{id}";
     }
 
     @Test
-    public void testCreateReadCompensation() {
-    // Create test employee
-    Employee testEmployee = new Employee();
-    testEmployee.setEmployeeId("16a596ae-edd3-4847-99fe-c4518e82c86f");
-    testEmployee.setFirstName("John");
-    testEmployee.setLastName("Lennon");
-    testEmployee.setDepartment("Engineering");
-    testEmployee.setPosition("Development Manager");
+    public void testCreateCompensationForInvalidEmployee() {
+        String nonExistentEmployeeId = "non-existent-employee-id";
+        Compensation compensation = new Compensation();
+        compensation.setEmployeeId(nonExistentEmployeeId);
+        compensation.setSalary(50000);
+        compensation.setEffectiveDate(LocalDate.of(2024, 1, 1));
 
-    // Create test compensation
-    Compensation testCompensation = new Compensation();
-    testCompensation.setEmployee(testEmployee);
-    testCompensation.setSalary(150000);
-    testCompensation.setEffectiveDate(LocalDate.of(2024, 1, 1));
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+            compensationUrl,
+            compensation,
+            ErrorResponse.class
+        );
 
-    // Create compensation
-    ResponseEntity<Compensation> createResponse = restTemplate.postForEntity(compensationUrl, testCompensation, Compensation.class);
-    assertEquals(HttpStatus.OK, createResponse.getStatusCode());
-
-    Compensation createdCompensation = createResponse.getBody();
-    assertNotNull(createdCompensation);
-    assertCompensationEquivalence(testCompensation, createdCompensation);
-
-    // Read compensation
-    ResponseEntity<Compensation> readResponse = restTemplate.getForEntity(compensationIdUrl, Compensation.class, testEmployee.getEmployeeId());
-    assertEquals(HttpStatus.OK, readResponse.getStatusCode());
-
-    Compensation readCompensation = readResponse.getBody();
-    assertNotNull(readCompensation);
-    assertCompensationEquivalence(testCompensation, readCompensation);
-    }
-
-    @Test
-    public void testNonexistentEmployee() {
-        Compensation testCompensation = new Compensation();
-        testCompensation.setEmployeeId("invalid-id");
-        testCompensation.setSalary(100000);
-        testCompensation.setEffectiveDate(LocalDate.of(2024, 1, 1));
-
-        ResponseEntity<Compensation> response = restTemplate.postForEntity(compensationUrl, testCompensation, Compensation.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Employee not found with ID: " + nonExistentEmployeeId, response.getBody().getMessage());
     }
 
-    private static void assertCompensationEquivalence(Compensation expected, Compensation actual) {
-        assertEquals(expected.getEmployeeId(), actual.getEmployeeId());
-        assertEquals(expected.getSalary(), actual.getSalary());
-        assertEquals(expected.getEffectiveDate(), actual.getEffectiveDate());
-        assertNotNull(actual.getEmployee());
-        assertEquals(expected.getEmployeeId(), actual.getEmployee().getEmployeeId());
+    @Test
+    public void testReadCompensationForEmployeeWithoutCompensation() {
+        String employeeId = "b7839309-3348-463b-a7e3-5de1c168beb3";
+
+        ResponseEntity<ErrorResponse> response = restTemplate.getForEntity(
+            compensationByIdUrl,
+            ErrorResponse.class,
+            employeeId
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("No compensation found for employee ID: " + employeeId, response.getBody().getMessage());
+    }
+
+    @Test
+    public void testCreateAndReadCompensationForValidEmployee() {
+        String employeeId = "16a596ae-edd3-4847-99fe-c4518e82c86f";
+
+        LOG.info("Starting test with employeeId: {}", employeeId);
+
+        Compensation newComp = new Compensation();
+        newComp.setEmployeeId(employeeId);
+        newComp.setSalary(120000);
+        newComp.setEffectiveDate(LocalDate.of(2023, 6, 1));
+
+        LOG.info("Sending create request to: {}", compensationUrl);
+        ResponseEntity<Compensation> createResponse = restTemplate.postForEntity(compensationUrl, newComp, Compensation.class);
+        LOG.info("Create response status: {}", createResponse.getStatusCode());
+        LOG.info("Create response body: {}", createResponse.getBody());
+
+        assertEquals(HttpStatus.OK, createResponse.getStatusCode());
+        assertNotNull("Create response body should not be null", createResponse.getBody());
+
+        String readUrl = compensationUrl + "/" + employeeId;
+        LOG.info("Sending read request to: {}", readUrl);
+        ResponseEntity<Compensation> readResponse = restTemplate.getForEntity(readUrl, Compensation.class);
+        LOG.info("Read response status: {}", readResponse.getStatusCode());
+        LOG.info("Read response body: {}", readResponse.getBody());
+
+        assertEquals("Read response status should be OK", HttpStatus.OK, readResponse.getStatusCode());
+        Compensation readComp = readResponse.getBody();
+        assertNotNull("Read response body should not be null", readComp);
+
+        if (readComp != null) {
+            LOG.info("Verification - Compensation ID: {}", readComp.getId());
+            LOG.info("Verification - Employee: {}", readComp.getEmployee());
+            LOG.info("Verification - Salary: {}", readComp.getSalary());
+            LOG.info("Verification - Date: {}", readComp.getEffectiveDate());
+
+            assertEquals("Salary should match", 120000, readComp.getSalary());
+            assertEquals("Date should match", LocalDate.of(2023, 6, 1), readComp.getEffectiveDate());
+            assertNotNull("Employee should not be null", readComp.getEmployee());
+
+            if (readComp.getEmployee() != null) {
+                assertEquals("Employee ID should match", employeeId, readComp.getEmployee().getEmployeeId());
+                assertEquals("First name should be John", "John", readComp.getEmployee().getFirstName());
+                assertEquals("Last name should be Lennon", "Lennon", readComp.getEmployee().getLastName());
+            }
+        }
+    }
+
+    @Test
+    public void testCreateCompensationWithEmptyEmployeeId() {
+        Compensation compensation = new Compensation();
+        compensation.setEmployeeId("");
+        compensation.setSalary(75000);
+        compensation.setEffectiveDate(LocalDate.of(2024, 3, 1));
+
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+            compensationUrl,
+            compensation,
+            ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Employee ID cannot be null or empty", response.getBody().getMessage());
+    }
+
+    @Test
+    public void testCreateCompensationWithNullEmployeeId() {
+        Compensation compensation = new Compensation();
+        compensation.setEmployeeId(null);
+        compensation.setSalary(85000);
+        compensation.setEffectiveDate(LocalDate.of(2024, 6, 15));
+
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+            compensationUrl,
+            compensation,
+            ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Employee ID cannot be null or empty", response.getBody().getMessage());
     }
 }
