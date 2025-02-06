@@ -1,6 +1,4 @@
 # Step 1.1: Create ReportingStructure Class
-
-## Iteration 1
 ## Implementation Details
 - Created ReportingStructure class in data package
 - Added two fields: employee and numberOfReports
@@ -10,8 +8,6 @@
 
 
 # Step 1.2: Implement REST Endpoint and Service Layer
-
-## Iteration 1
 ## Implementation Details
  - Created ReportingStructureController with GET endpoint
  - Implemented ReportingStructureService interface
@@ -25,8 +21,6 @@
 
 
 # Step 1.3: Implement Unit Tests
-
-## Iteration 1
 ## Implementation Details
 - Created test class for ReportingStructure endpoint
 - Tests cover three scenarios:
@@ -40,8 +34,6 @@
 
 
 # Step 2.1: Create Compensation Class
-
-## Iteration 1
 ## Implementation Details
 - Created Compensation class with the required fields
 - Added employeeId for MongoDB indexing
@@ -52,8 +44,6 @@
 
 
 # Step 2.2: Add Persistence Layer
-
-## Iteration 1
 ## Implementation Details
 - Created CompensationRepository interface
 - Added MongoDB repository support
@@ -61,8 +51,6 @@
 
 
 # Step 2.3: Create REST Endpoints
-
-## Iteration 1
 ## Implementation Details
 - Created service interface and implementation
 - Added REST controller with POST/GET endpoints
@@ -74,8 +62,6 @@
 
 
 # Step 2.4: Add Unit Tests
-
-## Iteration 1
 ## Implementation Details
 - Created integration tests for compensation endpoints
 - Tests cover:
