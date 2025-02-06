@@ -105,3 +105,8 @@ persist and fetch `Compensation` data for a specific `Employee` using the persis
 
 ## Delivery
 Please upload your results to a publicly accessible Git repo. Free ones are provided by GitHub and Bitbucket.
+
+### Solution
+This application introduces a separate type called ReportingStructure that holds an employee and a number representing all direct and indirect reports. This object is not stored in the database. A service class calculates the number of reports by traversing each employee’s subordinates recursively. The controller layer calls this service to return the ReportingStructure for any employee. This approach keeps the data model focused on employees while providing a clear way to compute the total reports whenever requested.
+
+A new type called Compensation has also been added. Each record contains an employeeId, a salary value, and an effective date. These are stored separately and accessed through a POST endpoint to create a record and a GET endpoint to retrieve it based on employee ID. The database layer is designed to keep employee details and compensation records apart, which simplifies the logic for storing and retrieving each. This layout makes it possible to handle multiple compensation entries over time without changing the employee model.
